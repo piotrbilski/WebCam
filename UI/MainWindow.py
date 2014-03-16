@@ -86,12 +86,33 @@ class MainWindow(QtGui.QWidget):
             self.makePic.setEnabled()
             return
         self.makePic.setDisabled()
+        
+        
+    def detectFace(self,img):
+    
+        cascade = cv2.CascadeClassifier("haarcascade_frontalface_alt.xml")
+        rects = cascade.detectMultiScale(img, 1.3, 4, cv2.cv.CV_HAAR_SCALE_IMAGE, (20,20))
+
+        if len(rects) == 0:
+            return [], img
+        rects[:, 2:] += rects[:, :2]
+        return rects, img
+
+    def box(self, rects, img):
+        for x1, y1, x2, y2 in rects:
+            cv2.rectangle(img, (x1, y1), (x2, y2), (127, 255, 0), 2)
+        
+        return img
+
             
         
     def displayPic(self, picArray):
         
         self.leftLabel.setPixmap(self.__arrayToQPixmap(picArray))
-        self.rightLabel.setPixmap(self.__arrayToQPixmap(picArray))
+        
+        detect= self.detectFace(picArray)
+        boxed = self.box(detect[0],detect[1])
+        self.rightLabel.setPixmap(self.__arrayToQPixmap(boxed))
         
     def capturePic(self):
         if self.camera.isRunning():
